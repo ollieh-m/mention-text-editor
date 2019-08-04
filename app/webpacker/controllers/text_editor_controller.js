@@ -6,22 +6,13 @@ export default class extends Controller {
 	connect(){
 		this.element.addEventListener("keydown", (event)=>{
 			this.selection = document.getSelection()
-			if (this.selection.anchorNode.parentElement.dataset.mention) {
-				if (this._isSelectingFromEnd(event) || this._isSelectingFromBeginning(event)){
-					event.preventDefault()
-					this._selectElement(this.selection.anchorNode)
-				}
-			}
-		})
-
-		// TO DO: Improve this hack:
-		// necessary to select mention that isn't at beginning of text area when pressing right arrow
-		// keydown doesn't work because the mention is the next sibling until the cursor has moved
-		this.element.addEventListener("keyup", (event)=>{
-			this.selection = document.getSelection()
-			if (this.selection.anchorNode.parentElement.dataset.mention && event.keyCode === 39 && this.selection.anchorOffset == 1) {
+			
+			if (this._isSelectingMentionFromAfter(event) || this._isSelectingMentionFromBeginning(event)){
 				event.preventDefault()
 				this._selectElement(this.selection.anchorNode)
+			} else if (this._isSelectingMentionFromBefore(event)) {
+				event.preventDefault()
+				this._selectElement(this.selection.anchorNode.nextSibling.firstChild)
 			}
 		})
 	}
@@ -32,12 +23,28 @@ export default class extends Controller {
 		this.editorTarget.focus();
 	}
 
-	_isSelectingFromEnd(event){
-		return (event.keyCode === 37 || event.keyCode === 8) && this.selection.anchorOffset == this.selection.anchorNode.length
+	_isSelectingMentionFromAfter(event){
+		if (event.keyCode === 37 || event.keyCode === 8) {
+			if (this.selection.anchorNode.parentElement.dataset.mention) {
+				return this.selection.anchorOffset == this.selection.anchorNode.length
+			}
+		}
 	}
 
-	_isSelectingFromBeginning(event){
-		return event.keyCode === 39 && this.selection.anchorOffset == 0 && this.selection.isCollapsed
+	_isSelectingMentionFromBeginning(event){
+		if (event.keyCode === 39) {
+			if (this.selection.anchorNode.parentElement.dataset.mention) {
+				return this.selection.anchorOffset == 0 && this.selection.isCollapsed
+			}
+		}
+	}
+
+	_isSelectingMentionFromBefore(event){
+		if (event.keyCode === 39) {
+			if (this.selection.anchorNode.nextSibling && this.selection.anchorNode.nextSibling.dataset && this.selection.anchorNode.nextSibling.dataset.mention) {
+				return this.selection.anchorOffset == this.selection.anchorNode.length
+			}
+		}
 	}
 
 	_selectElement(element){
