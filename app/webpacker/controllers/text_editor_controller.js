@@ -6,12 +6,22 @@ export default class extends Controller {
 	connect(){
 		this.element.addEventListener("keydown", (event)=>{
 			this.selection = document.getSelection()
-			// TO DO: This isn't working when pressing right arrow to select mention that isn't at beginning of text area
 			if (this.selection.anchorNode.parentElement.dataset.mention) {
 				if (this._isSelectingFromEnd(event) || this._isSelectingFromBeginning(event)){
 					event.preventDefault()
 					this._selectElement(this.selection.anchorNode)
 				}
+			}
+		})
+
+		// TO DO: Improve this hack:
+		// necessary to select mention that isn't at beginning of text area when pressing right arrow
+		// keydown doesn't work because the mention is the next sibling until the cursor has moved
+		this.element.addEventListener("keyup", (event)=>{
+			this.selection = document.getSelection()
+			if (this.selection.anchorNode.parentElement.dataset.mention && event.keyCode === 39 && this.selection.anchorOffset == 1) {
+				event.preventDefault()
+				this._selectElement(this.selection.anchorNode)
 			}
 		})
 	}
