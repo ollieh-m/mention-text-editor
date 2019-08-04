@@ -1,7 +1,7 @@
 import { Controller } from "stimulus"
 
 export default class extends Controller {
-	static targets = ["editor"]
+	static targets = ["editor", "input"]
 
 	connect(){
 		this.element.addEventListener("keydown", (event)=>{
@@ -17,10 +17,26 @@ export default class extends Controller {
 		})
 	}
 
+	updateInput(){
+		this._updateInput();
+	}
+
 	insertMention(){
 		this._insertAtStart(`<span class="mention" data-mention="123">@test mention</span>&nbsp`);
+		this._updateInput();
 		this._setCursorToEnd();
 		this.editorTarget.focus();
+	}
+
+	_updateInput(){
+		var nodesArray = [...this.editorTarget.childNodes]
+		this.inputTarget.value = nodesArray.map((node)=>{
+			if (node.dataset && node.dataset.mention) {
+				return `[${node.textContent}](${node.dataset.mention})`
+			} else {
+				return node.textContent
+			}
+		}).join('')
 	}
 
 	_isSelectingMentionFromAfter(event){
